@@ -12,7 +12,11 @@ const crearToken = (usuario, secreta, expiresIn) => {
 }
 const resolvers = {
     Query: {
+        obtenerProyectos: async (_, { }, ctx) => {
+            const proyectos = await Proyecto.find({ creador: ctx.usuario.id })
 
+            return proyectos
+        }
     },
     Mutation: {
         crearUsuario: async (_, { input }, ctx) => {
@@ -25,9 +29,7 @@ const resolvers = {
                 throw new Error('El usuario ya está registrado')
             }
 
-
             try {
-
                 // Hashear password
                 const salt = await bcryptjs.genSalt(10)
                 input.password = await bcryptjs.hash(password, salt)
@@ -93,6 +95,22 @@ const resolvers = {
             // Guardar proyecto
             proyecto = await Proyecto.findOneAndUpdate({ _id: id }, input, { new: true })
             return proyecto
+        },
+        eliminarProyecto: async (_, { id }, ctx) => {
+            // Revisar si existe el proyecto
+            let proyecto = await Proyecto.findById(id)
+            if (!proyecto) {
+                throw new Error('Proyecto no existe')
+            }
+            // Verificar si la persona es el creador
+            console.log(proyecto)
+            if (proyecto.creador.toString() !== ctx.usuario.id) {
+                throw new Error('No tienes las credenciales para editar')
+            }
+            // Eliminar
+            await Proyecto.findOneAndDelete({ _id: id })
+
+            return "Proyecto Eliminado"
         }
     }
 }
