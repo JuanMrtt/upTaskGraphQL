@@ -67,7 +67,6 @@ const resolvers = {
             }
         },
         nuevoProyecto: async (_, { input }, ctx) => {
-
             try {
                 const proyecto = new Proyecto(input)
                 // Asociar al creador
@@ -79,6 +78,21 @@ const resolvers = {
             } catch (error) {
                 console.log(error)
             }
+        },
+        actualizarProyecto: async (_, { id, input }, ctx) => {
+            // Revisar si existe el proyecto
+            let proyecto = await Proyecto.findById(id)
+            if (!proyecto) {
+                throw new Error('Proyecto no encontrado')
+            }
+            // Verificar si la persona es el creador
+            console.log(proyecto)
+            if (proyecto.creador.toString() !== ctx.usuario.id) {
+                throw new Error('No tienes las credenciales para editar')
+            }
+            // Guardar proyecto
+            proyecto = await Proyecto.findOneAndUpdate({ _id: id }, input, { new: true })
+            return proyecto
         }
     }
 }
