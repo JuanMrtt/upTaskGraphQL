@@ -1,5 +1,6 @@
 const Usuario = require('../models/Usuario')
 const Proyecto = require('../models/Proyecto')
+const Tarea = require('../models/Tarea')
 const bcryptjs = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 require('dotenv').config({ path: 'variables.env' })
@@ -10,6 +11,7 @@ const crearToken = (usuario, secreta, expiresIn) => {
 
     return jwt.sign({ id, email }, secreta, { expiresIn })
 }
+
 const resolvers = {
     Query: {
         obtenerProyectos: async (_, { }, ctx) => {
@@ -111,6 +113,35 @@ const resolvers = {
             await Proyecto.findOneAndDelete({ _id: id })
 
             return "Proyecto Eliminado"
+        },
+        nuevaTarea: async (_, { input }, ctx) => {
+            try {
+                const tarea = new Tarea(input)
+                tarea.creador = ctx.usuario.id
+
+                const resultado = await tarea.save()
+                return resultado
+            } catch (error) {
+                console.log(error)
+            }
+        },
+        actualizarTarea: async (_, { id, input, estado }, ctx) => {
+            // Si la tarea existe o no
+            let tarea = await Tarea.findById(id)
+            if (!tarea) {
+                throw new Error('Tarea no encontrada')
+            }
+            // Si la persona que lo edita es el propietario
+            if (tarea.creador.toString() !== ctx.usuario.id) {
+                throw new Error('No tienes las credenciales para editar')
+            }
+
+            // asignar estado
+            input.estado = estado
+
+            // Guardar y retornar la tarea
+            tarea = await Tarea.findOneAndUpdate({ _id: id }, input, { new: true })
+            return tarea
         }
     }
 }
