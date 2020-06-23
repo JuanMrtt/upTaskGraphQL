@@ -18,6 +18,11 @@ const resolvers = {
             const proyectos = await Proyecto.find({ creador: ctx.usuario.id })
 
             return proyectos
+        },
+        obtenerTareas: async (_, { input }, ctx) => {
+            const tareas = await Tarea.find({ creador: ctx.usuario.id }).where('proyecto').equals(input.proyecto)
+
+            return tareas
         }
     },
     Mutation: {
@@ -142,7 +147,23 @@ const resolvers = {
             // Guardar y retornar la tarea
             tarea = await Tarea.findOneAndUpdate({ _id: id }, input, { new: true })
             return tarea
-        }
+        },
+        eliminarTarea: async (_, { id }, ctx) => {
+            // Revisar si existe el proyecto
+            let tarea = await Tarea.findById(id)
+            if (!tarea) {
+                throw new Error('Tarea no encontrada')
+            }
+            // Verificar si la persona es el creador
+            console.log(tarea)
+            if (tarea.creador.toString() !== ctx.usuario.id) {
+                throw new Error('No tienes las credenciales para editar')
+            }
+            // Eliminar
+            await Tarea.findOneAndDelete({ _id: id })
+
+            return "Tarea Eliminada"
+        },
     }
 }
 
