@@ -1,27 +1,36 @@
-const { ApolloServer } = require('apollo-server')
-const cursos = [
-    {
-        titulo: 'JavaScript Moderno Guía Definitiva Construye +10 Proyectos',
-        tecnologia: 'JavaScript ES6',
-    },
-    {
-        titulo: 'React – La Guía Completa: Hooks Context Redux MERN +15 Apps',
-        tecnologia: 'React',
-    },
-    {
-        titulo: 'Node.js – Bootcamp Desarrollo Web inc. MVC y REST API’s',
-        tecnologia: 'Node.js'
-    },
-    {
-        titulo: 'ReactJS Avanzado – FullStack React GraphQL y Apollo',
-        tecnologia: 'React'
-    }
-];
-
+const Usuario = require('../models/Usuario')
+const bcryptjs = require('bcryptjs')
 const resolvers = {
     Query: {
-        obtenerCursos: () => cursos,
-        obtenerTecnologia: () => cursos
+
+    },
+    Mutation: {
+        crearUsuario: async (_, { input }, ctx) => {
+            const { email, password } = input
+
+            const existeUsuario = await Usuario.findOne({ email })
+
+            // si el usuario existe, muestra en graphql
+            if (existeUsuario) {
+                throw new Error('El usuario ya está registrado')
+            }
+
+            try {
+
+                // Hashear password
+                const salt = await bcryptjs.genSalt(10)
+                input.password = await bcryptjs.hash(password, salt)
+                console.log(input)
+                // Registro de nuevo usuario
+                const nuevoUsuario = new Usuario(input)
+                console.log(nuevoUsuario)
+
+                nuevoUsuario.save()
+                return "Usuario Creado Correctamente"
+            } catch (error) {
+                console.log(error)
+            }
+        }
     }
 }
 
