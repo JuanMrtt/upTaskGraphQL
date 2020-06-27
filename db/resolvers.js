@@ -7,9 +7,9 @@ require('dotenv').config({ path: 'variables.env' })
 
 // Crea y firma un jwt
 const crearToken = (usuario, secreta, expiresIn) => {
-    const { id, email } = usuario
+    const { id, email, nombre } = usuario
 
-    return jwt.sign({ id, email }, secreta, { expiresIn })
+    return jwt.sign({ id, email, nombre }, secreta, { expiresIn })
 }
 
 const resolvers = {
@@ -82,7 +82,7 @@ const resolvers = {
                 proyecto.creador = ctx.usuario.id
                 // Guarda en BD
                 const resultado = await proyecto.save()
-
+                console.log('resolver:', resultado)
                 return resultado
             } catch (error) {
                 console.log(error)
